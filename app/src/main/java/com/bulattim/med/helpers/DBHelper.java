@@ -98,7 +98,8 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public String getUsername(String email) {
         String[] columns = {
-                COLUMN_USER_NAME
+                COLUMN_USER_NAME,
+                COLUMN_USER_EMAIL
         };
         String sortOrder =
                 COLUMN_USER_NAME + " ASC";
