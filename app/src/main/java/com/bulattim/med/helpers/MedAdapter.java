@@ -64,6 +64,8 @@ public class MedAdapter extends RecyclerView.Adapter<MedAdapter.MyAdapter> {
         holder.time.setText(String.valueOf(meds.get(position).getTime()));
     }
 
+    public void foo(){String s = "fdsfdsf";}
+
     @Override
     public int getItemCount() {
         return meds.size();
