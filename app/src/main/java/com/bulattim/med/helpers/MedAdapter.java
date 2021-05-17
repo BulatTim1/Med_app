@@ -54,8 +54,7 @@ public class MedAdapter extends RecyclerView.Adapter<MedAdapter.MyAdapter> {
     @Override
     public MyAdapter onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_med,parent, false);
-        MyAdapter myAdapter = new MyAdapter(v);
-        return myAdapter;
+        return new MyAdapter(v);
     }
 
 
@@ -68,9 +67,5 @@ public class MedAdapter extends RecyclerView.Adapter<MedAdapter.MyAdapter> {
     @Override
     public int getItemCount() {
         return meds.size();
-    }
-
-    public boolean fromString(String str){
-        Med m = new Med();
     }
 }
