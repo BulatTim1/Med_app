@@ -12,6 +12,7 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bulattim.med.R;
@@ -23,7 +24,7 @@ import com.google.firebase.auth.FirebaseUser;
 
 public class MainFragment extends Fragment {
 
-    private RecyclerView rc;
+    private RecyclerView rv;
     private FirebaseAuth auth;
 
     public MainFragment() {
@@ -43,6 +44,9 @@ public class MainFragment extends Fragment {
         Button bLogOut = root.findViewById(R.id.bExit);
         Button bAdd = root.findViewById(R.id.bAdd);
         TextView username = root.findViewById(R.id.tHello);
+        rv = root.findViewById(R.id.rcview);
+        RecyclerView.LayoutManager manager = new LinearLayoutManager(getContext());
+        rv.setLayoutManager(manager);
         SharedPreferences sp = requireActivity().getPreferences(Context.MODE_PRIVATE);
         String email = sp.getString("email", null);
         if (email == null && user == null) {

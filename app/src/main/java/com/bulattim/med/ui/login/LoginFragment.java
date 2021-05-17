@@ -58,8 +58,8 @@ public class LoginFragment extends Fragment {
         if (!isEmail(email)) {Toast.makeText(getContext(), "Неправильная почта!", Toast.LENGTH_LONG).show(); return;}
         auth.signInWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
             if (task.isSuccessful()) {
-                edt.putString("username", email.getText().toString());
-                edt.putString("email", Objects.requireNonNull(auth.getCurrentUser()).getEmail());
+                edt.putString("username", db.getUsername(email.getText().toString()));
+                edt.putString("email", email.getText().toString());
                 edt.putString("med", db.getMed(email.getText().toString()));
                 edt.apply();
                 emptyInputEditText();
