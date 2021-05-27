@@ -3,7 +3,6 @@ package com.bulattim.med.helpers;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -37,10 +36,11 @@ public class MedAdapter extends RecyclerView.Adapter<MedAdapter.MyAdapter> {
         }
     }
 
-    public class MyAdapter extends RecyclerView.ViewHolder{
+    public static class MyAdapter extends RecyclerView.ViewHolder{
 
-        TextView name, time;
-        Button btn;
+        public TextView name;
+        public TextView time;
+        public Button btn;
 
         public MyAdapter(@NonNull View itemView) {
             super(itemView);

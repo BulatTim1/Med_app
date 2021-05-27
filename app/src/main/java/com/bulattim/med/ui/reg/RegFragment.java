@@ -16,16 +16,12 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.bulattim.med.R;
-import com.bulattim.med.helpers.DBHelper;
 import com.bulattim.med.models.User;
 import com.bulattim.med.ui.login.LoginFragment;
 import com.bulattim.med.ui.main.MainFragment;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-
-import org.jetbrains.annotations.NotNull;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.Objects;
 
@@ -33,23 +29,21 @@ public class RegFragment extends Fragment {
     
     
     private EditText username, email, pass, pass2;
-    private DBHelper db;
     private User user;
-    private SharedPreferences.Editor edt;
+    private SharedPreferences sp;
     private FirebaseAuth auth;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_reg, container, false);
         auth = FirebaseAuth.getInstance();
-        username = (EditText) root.findViewById(R.id.username);
-        email = (EditText) root.findViewById(R.id.email);
-        pass = (EditText) root.findViewById(R.id.password);
-        pass2 = (EditText) root.findViewById(R.id.password2);
+        username = root.findViewById(R.id.username);
+        email = root.findViewById(R.id.email);
+        pass = root.findViewById(R.id.password);
+        pass2 = root.findViewById(R.id.password2);
         Button bReg = root.findViewById(R.id.bReg);
         Button bToLog = root.findViewById(R.id.bToLog);
-        SharedPreferences sp = requireActivity().getPreferences(Context.MODE_PRIVATE);
-        edt = sp.edit();
+        sp = requireActivity().getSharedPreferences("APP_PREFERNCES", Context.MODE_PRIVATE);
         bReg.setOnClickListener((v -> postDataToSQLite()));
         bToLog.setOnClickListener((v -> {
             FragmentManager fm = getParentFragmentManager();
@@ -58,23 +52,25 @@ public class RegFragment extends Fragment {
             ft.replace(R.id.host_fragment, fragment);
             ft.commit();
         }));
-        db = new DBHelper(this.getActivity());
         user = new User();
-        edt.apply();
         return root;
     }
     private void postDataToSQLite() {
         if (username.getText().toString().equals("Guest") || username.getText().toString().equals("Гость")){ Toast.makeText(getContext(), "Неправильное имя", Toast.LENGTH_LONG).show(); return;}
         if (!isEmail(email)) {Toast.makeText(getContext(), "Неправильный email", Toast.LENGTH_LONG).show(); return;}
         if (!pass.getText().toString().equals(pass2.getText().toString()) || pass.getText().length() < 8){ Toast.makeText(getContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); return;}
-        if (!db.checkUser(email.getText().toString())) {
-            auth.createUserWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
+        auth.createUserWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
                 if (task.isSuccessful()) {
                     user.setName(username.getText().toString());
                     user.setEmail(email.getText().toString());
-                    db.addUser(user);
+                    user.setMed(sp.getString("med", "[]"));
+                    DatabaseReference mDatabase;
+                    mDatabase = FirebaseDatabase.getInstance().getReference().child("users");
+                    mDatabase.child("users").child(task.getResult().getUser().getUid()).setValue(user);
+                    SharedPreferences.Editor edt = sp.edit();
                     edt.putString("username", username.getText().toString());
                     edt.putString("email", email.getText().toString());
+                    edt.putString("med", "[]");
                     edt.apply();
                     emptyInputEditText();
                     FragmentManager fm = getParentFragmentManager();
@@ -87,9 +83,6 @@ public class RegFragment extends Fragment {
                             Toast.LENGTH_SHORT).show();
                 }
             });
-        } else {
-            Toast.makeText(getContext(), "Пользователь существует", Toast.LENGTH_LONG).show();
-        }
     }
 
     private void emptyInputEditText() {

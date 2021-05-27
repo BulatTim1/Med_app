@@ -12,14 +12,15 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 
 import com.bulattim.med.R;
-import com.bulattim.med.helpers.DBHelper;
 import com.bulattim.med.ui.main.MainFragment;
 import com.bulattim.med.ui.reg.RegFragment;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.FirebaseDatabase;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Objects;
 
@@ -27,7 +28,6 @@ public class LoginFragment extends Fragment {
     private EditText email, pass;
     private FirebaseAuth auth;
     private SharedPreferences.Editor edt;
-    private DBHelper db;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -38,40 +38,31 @@ public class LoginFragment extends Fragment {
         Button bToReg = root.findViewById(R.id.bRegFLog);
         Button bAnom = root.findViewById(R.id.bGuest);
         auth = FirebaseAuth.getInstance();
-        db = new DBHelper(getContext());
-        SharedPreferences sp = requireActivity().getPreferences(Context.MODE_PRIVATE);
-        edt = sp.edit();
-        bLog.setOnClickListener((v -> verifyFromSQLite()));
-        bToReg.setOnClickListener((v -> {
-            FragmentManager fm = getParentFragmentManager();
-            FragmentTransaction ft = fm.beginTransaction();
-            RegFragment fragment = new RegFragment();
-            ft.replace(R.id.host_fragment, fragment);
-            ft.commit();
+        SharedPreferences sp = requireActivity().getSharedPreferences("APP_PREFERNCESS", Context.MODE_PRIVATE);
+        bLog.setOnClickListener((v -> {
+            if (!isEmail(email)) {Toast.makeText(getContext(), "Неправильная почта!", Toast.LENGTH_LONG).show(); return;}
+            auth.signInWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
+                if (task.isSuccessful()) {
+                    JSONObject db_get = null;
+                    try {
+                        db_get = new JSONObject(Objects.requireNonNull(FirebaseDatabase.getInstance().getReference().child("users").child(Objects.requireNonNull(task.getResult().getUser().getUid())).getKey()));
+                        sp.edit().putString("username", db_get.getString("username")).putString("email", db_get.getString("email")).putString("med", db_get.getJSONArray("med").toString()).apply();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    emptyInputEditText();
+                    getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new MainFragment()).commit();
+                } else {
+                    Toast.makeText(getContext(), "Не удалось войти", Toast.LENGTH_LONG).show();
+                }
+            });
         }));
-        bAnom.setOnClickListener(v -> auth.signInAnonymously());
-        edt.apply();
-        return root;
-    }
-
-    private void verifyFromSQLite() {
-        if (!isEmail(email)) {Toast.makeText(getContext(), "Неправильная почта!", Toast.LENGTH_LONG).show(); return;}
-        auth.signInWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
-            if (task.isSuccessful()) {
-                edt.putString("username", db.getUsername(email.getText().toString().trim()));
-                edt.putString("email", email.getText().toString());
-                edt.putString("med", db.getMed(email.getText().toString()));
-                edt.apply();
-                emptyInputEditText();
-                FragmentManager fm = getParentFragmentManager();
-                FragmentTransaction ft = fm.beginTransaction();
-                MainFragment fragment = new MainFragment();
-                ft.replace(R.id.host_fragment, fragment);
-                ft.commit();
-            } else {
-                Toast.makeText(getContext(), "Не удалось войти", Toast.LENGTH_LONG).show();
-            }
+        bToReg.setOnClickListener((v -> getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new RegFragment()).addToBackStack("").commit()));
+        bAnom.setOnClickListener(v -> {
+            auth.signInAnonymously();
+            getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new MainFragment()).commit();
         });
+        return root;
     }
 
     private void emptyInputEditText() {

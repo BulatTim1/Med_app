@@ -1,11 +1,18 @@
 package com.bulattim.med.models;
 
+import com.google.firebase.database.Exclude;
+import com.google.firebase.database.IgnoreExtraProperties;
+
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@IgnoreExtraProperties
 public class Med {
-    private String name, time;
+    public String name, time;
 
     public String getName() {
         return name;
@@ -44,5 +51,24 @@ public class Med {
         } catch (JSONException e) {
             return false;
         }
+    }
+
+    public Med(){
+        this.name = "";
+        this.time = "";
+    }
+
+    public Med(String name, String time) {
+        this.name = name;
+        this.time = time;
+    }
+
+    @Exclude
+    public Map toMap() {
+        HashMap result = new HashMap<>();
+        result.put("name", name);
+        result.put("time", time);
+
+        return result;
     }
 }
