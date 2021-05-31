@@ -1,71 +1,45 @@
 package com.bulattim.med.helpers;
 
-import android.view.LayoutInflater;
+import android.app.Activity;
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.bulattim.med.R;
 import com.bulattim.med.models.Med;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import java.util.List;
 
-import java.util.ArrayList;
 
-public class MedAdapter extends RecyclerView.Adapter<MedAdapter.MyAdapter> {
 
-    ArrayList<Med> meds;
+public class MedAdapter extends ArrayAdapter<Med> {
+    public MedAdapter(Context context, List<Med> object){
+        super(context,0, object);
+    }
 
-    public MedAdapter(String meds_json){
-        try {
-            JSONArray medds = new JSONArray(meds_json);
-            for (int i = 0; i < medds.length(); i++){
-                Med m = new Med();
-                m.setName(((JSONObject) medds.get(i)).getString("name"));
-                m.setTime(((JSONObject) medds.get(i)).getString("time"));
-                meds.add(m);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
+    @Override
+    public View getView(int position, View view, ViewGroup parent){
+        if(view == null){
+            view =  ((Activity)getContext()).getLayoutInflater().inflate(R.layout.card_med,parent,false);
         }
+
+        TextView name = view.findViewById(R.id.tMed);
+        TextView time = view.findViewById(R.id.tTime);
+        Button change = view.findViewById(R.id.bChange);
+
+        Med med = getItem(position);
+
+        name.setText(med.getName());
+        time.setText(med.getTime());
+        change.setOnClickListener(v -> {
+            //TODO: change time or name of med
+        });
+
+
+        return view;
     }
 
-    public static class MyAdapter extends RecyclerView.ViewHolder{
-
-        public TextView name;
-        public TextView time;
-        public Button btn;
-
-        public MyAdapter(@NonNull View itemView) {
-            super(itemView);
-            name = itemView.findViewById(R.id.tMed);
-            time = itemView.findViewById(R.id.tTime);
-            btn = itemView.findViewById(R.id.bChange);
-        }
-    }
-
-    @NonNull
-    @Override
-    public MyAdapter onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_med,parent, false);
-        return new MyAdapter(v);
-    }
-
-
-    @Override
-    public void onBindViewHolder(@NonNull MyAdapter holder, int position) {
-        holder.name.setText(meds.get(position).getName());
-        holder.time.setText(String.valueOf(meds.get(position).getTime()));
-    }
-
-    @Override
-    public int getItemCount() {
-        return meds.size();
-    }
 }

@@ -10,15 +10,15 @@ import com.bulattim.med.R;
 
 
 public class MedViewHolder extends RecyclerView.ViewHolder{
-    public TextView medView;
-    public TextView timeView;
-    public Button btn;
+    public final TextView medView;
+    public final TextView timeView;
+    public final Button btn;
 
     public MedViewHolder(View itemView) {
         super(itemView);
 
-        medView = (TextView) itemView.findViewById(R.id.tMed);
-        timeView = (TextView) itemView.findViewById(R.id.tTime);
+        medView = itemView.findViewById(R.id.tMed);
+        timeView = itemView.findViewById(R.id.tTime);
         btn = itemView.findViewById(R.id.bChange);
     }
 }

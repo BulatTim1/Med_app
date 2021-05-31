@@ -51,10 +51,10 @@ public class User {
     }
 
     public void setMed(ArrayList<Med> med){
-        Iterator iter = med.iterator();
+        Iterator<Med> iter = med.iterator();
         this.med = new ArrayList<>();
         while(iter.hasNext()){
-            this.med.add((Med) iter.next());
+            this.med.add(iter.next());
         }
     }
 
@@ -63,7 +63,7 @@ public class User {
             JSONArray arr = new JSONArray(new JSONObject(json));
             this.med = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++){
-                this.med.add(new Med((String) arr.getJSONObject(i).getString("name"),(String) arr.getJSONObject(i).getString("time")));
+                this.med.add(new Med(arr.getJSONObject(i).getString("name"), arr.getJSONObject(i).getString("time")));
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -74,7 +74,7 @@ public class User {
             JSONArray arr = new JSONArray(json);
             this.med = new ArrayList<>();
             for (int i = 0; i < arr.length(); i++){
-                this.med.add(new Med((String) arr.getJSONObject(i).getString("name"), (String) arr.getJSONObject(i).getString("time")));
+                this.med.add(new Med(arr.getJSONObject(i).getString("name"), arr.getJSONObject(i).getString("time")));
             }
         } catch (JSONException e) {
             e.printStackTrace();

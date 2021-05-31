@@ -3,6 +3,7 @@ package com.bulattim.med.ui.reg;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,21 +17,26 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.bulattim.med.R;
+import com.bulattim.med.models.Med;
 import com.bulattim.med.models.User;
 import com.bulattim.med.ui.login.LoginFragment;
 import com.bulattim.med.ui.main.MainFragment;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class RegFragment extends Fragment {
     
     
     private EditText username, email, pass, pass2;
-    private User user;
-    private SharedPreferences sp;
     private FirebaseAuth auth;
 
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -43,7 +49,7 @@ public class RegFragment extends Fragment {
         pass2 = root.findViewById(R.id.password2);
         Button bReg = root.findViewById(R.id.bReg);
         Button bToLog = root.findViewById(R.id.bToLog);
-        sp = requireActivity().getSharedPreferences("APP_PREFERNCES", Context.MODE_PRIVATE);
+        SharedPreferences sp = requireActivity().getSharedPreferences("APP_PREFERNCES", Context.MODE_PRIVATE);
         bReg.setOnClickListener((v -> postDataToSQLite()));
         bToLog.setOnClickListener((v -> {
             FragmentManager fm = getParentFragmentManager();
@@ -52,7 +58,6 @@ public class RegFragment extends Fragment {
             ft.replace(R.id.host_fragment, fragment);
             ft.commit();
         }));
-        user = new User();
         return root;
     }
     private void postDataToSQLite() {
@@ -61,17 +66,22 @@ public class RegFragment extends Fragment {
         if (!pass.getText().toString().equals(pass2.getText().toString()) || pass.getText().length() < 8){ Toast.makeText(getContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); return;}
         auth.createUserWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
                 if (task.isSuccessful()) {
-                    user.setName(username.getText().toString());
-                    user.setEmail(email.getText().toString());
-                    user.setMed(sp.getString("med", "[]"));
-                    DatabaseReference mDatabase;
-                    mDatabase = FirebaseDatabase.getInstance().getReference().child("users");
-                    mDatabase.child("users").child(task.getResult().getUser().getUid()).setValue(user);
-                    SharedPreferences.Editor edt = sp.edit();
-                    edt.putString("username", username.getText().toString());
-                    edt.putString("email", email.getText().toString());
-                    edt.putString("med", "[]");
-                    edt.apply();
+                    User user = new User(username.getText().toString(), email.getText().toString());
+                    FirebaseFirestore db = FirebaseFirestore.getInstance();
+                    Map<String, Object> map = new HashMap<>();
+                    Map<String, Object> userdb = new HashMap<>();
+                    userdb.put("username", user.getName());
+                    userdb.put("email", user.getEmail());
+                    userdb.put("med", user.getMed());
+                    map.put(FirebaseAuth.getInstance().getCurrentUser().getUid(), userdb);
+                    db.collection("users").document(auth.getCurrentUser().getUid()).set(userdb).addOnCompleteListener(task1 -> {
+                        if(task1.isSuccessful()){
+                            Log.d("Firestore", "все найс");
+                            Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
+                        } else {
+                            Log.e("Firestore", "Чтото не так с дб");
+                        }
+                    });
                     emptyInputEditText();
                     FragmentManager fm = getParentFragmentManager();
                     FragmentTransaction ft = fm.beginTransaction();

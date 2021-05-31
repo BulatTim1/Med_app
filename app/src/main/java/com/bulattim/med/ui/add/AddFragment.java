@@ -1,24 +1,30 @@
 package com.bulattim.med.ui.add;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
 import com.bulattim.med.R;
+import com.bulattim.med.models.Med;
 import com.bulattim.med.models.User;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.auth.OAuthCredential;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AddFragment extends Fragment {
 
@@ -40,22 +46,16 @@ public class AddFragment extends Fragment {
         time = root.findViewById(R.id.edTime);
         Button btn = root.findViewById(R.id.bAddMed);
         btn.setOnClickListener(v -> {
-            SharedPreferences sp = requireActivity().getSharedPreferences("APP_PREFERNCES", Context.MODE_PRIVATE);
-            SharedPreferences.Editor edt = sp.edit();
-            String meds = sp.getString("med", "[]");
+            User user = new User();
             try {
-                JSONArray med = meds.equals("{}") ? new JSONArray() : new JSONArray(meds);
-                med.put(new JSONObject().put("name", name.getText().toString()).put("time", time.getText().toString()));
-                edt.putString("med", med.toString());
-                edt.apply();
-                User user = new User();
-                user.setEmail(sp.getString("email", ""));
-                user.setMed(med.toString());
-                user.setName(sp.getString("username", ""));
-                FirebaseDatabase.getInstance().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("med").setValue(med.toString());
+                ArrayList<Med> meds = user.getMed();
+                meds.add(new Med(name.getText().toString(), time.getText().toString()));
+                FirebaseFirestore.getInstance().collection("users").document(FirebaseAuth.getInstance().getCurrentUser().getUid()).update("med", meds).addOnSuccessListener(documentReference -> {
+                    Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
+                });
                 name.setText("");
                 time.setText("");
-            } catch (JSONException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });

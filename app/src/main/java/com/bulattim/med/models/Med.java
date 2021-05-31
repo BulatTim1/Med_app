@@ -31,7 +31,7 @@ public class Med {
     }
 
     @NotNull
-    public String toString(){
+    public String toString() {
         try {
             JSONObject js = new JSONObject();
             js.put("name", name);
@@ -42,7 +42,7 @@ public class Med {
         }
     }
 
-    public boolean fromString(String str){
+    public boolean fromString(String str) {
         try {
             JSONObject js = new JSONObject(str);
             this.name = js.getString("name");
@@ -53,7 +53,7 @@ public class Med {
         }
     }
 
-    public Med(){
+    public Med() {
         this.name = "";
         this.time = "";
     }
@@ -63,9 +63,23 @@ public class Med {
         this.time = time;
     }
 
+    public Med(Map<String, String> map) {
+        this.name = map.get("name");
+        this.time = map.get("time");
+    }
+
+    public Med(JSONObject json) {
+        try {
+            this.name = json.getString("name");
+            this.time = json.getString("time");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
     @Exclude
-    public Map toMap() {
-        HashMap result = new HashMap<>();
+    public Map<String, Object> toMap() {
+        Map<String, Object> result = new HashMap<>();
         result.put("name", name);
         result.put("time", time);
 

@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
                     String token = task.getResult();
 
                     Log.d("FCM", token);
-                    Toast.makeText(MainActivity.this, "Успешный вход", Toast.LENGTH_SHORT).show();
+//                    Toast.makeText(MainActivity.this, "Успешное получение токена FCM", Toast.LENGTH_SHORT).show();
                 });
     }
 }

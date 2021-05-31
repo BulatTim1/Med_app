@@ -1,31 +1,36 @@
 package com.bulattim.med.ui.main;
 
-import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.bulattim.med.R;
-import com.bulattim.med.helpers.MedViewHolder;
+import com.bulattim.med.helpers.MedAdapter;
 import com.bulattim.med.models.Med;
+import com.bulattim.med.models.User;
 import com.bulattim.med.ui.add.AddFragment;
 import com.bulattim.med.ui.login.LoginFragment;
-import com.firebase.ui.database.FirebaseRecyclerAdapter;
-import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.Source;
 
-import org.jetbrains.annotations.NotNull;
+import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 
@@ -51,50 +56,46 @@ public class MainFragment extends Fragment {
         Button bLogOut = root.findViewById(R.id.bExit);
         Button bAdd = root.findViewById(R.id.bAdd);
         TextView username = root.findViewById(R.id.tHello);
-        RecyclerView rv = root.findViewById(R.id.rcview);
-        final DatabaseReference userdb = FirebaseDatabase.getInstance().getReference().child("users");
-        if (auth.getCurrentUser() != null) {
-            FirebaseRecyclerOptions<Med> options = new FirebaseRecyclerOptions.Builder<Med>()
-                    .setQuery(userdb.child(Objects.requireNonNull(auth.getUid()))
-                            .child("Med"), Med.class).build();
-            FirebaseRecyclerAdapter<Med, MedViewHolder> Adapter = new FirebaseRecyclerAdapter<Med, MedViewHolder>(options) {
-                @NonNull
-                @NotNull
-                @Override
-                public MedViewHolder onCreateViewHolder(@NonNull @NotNull ViewGroup parent, int viewType) {
-                    View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.card_med, parent, false);
-                    MedViewHolder holder = new MedViewHolder(view);
-                    return holder;
+        User user = new User();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseFirestore.getInstance().collection("users").document(auth.getCurrentUser().getUid()).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                DocumentSnapshot doc = task.getResult();
+                if (doc.exists()) {
+                    user.setName(String.valueOf(doc.get("username")));
+                    user.setEmail(String.valueOf(doc.get("email")));
+                    user.setMed(doc.get("med").toString());
+                } else {
+                    Log.d("Firestore", "No such document");
                 }
-
-                @Override
-                protected void onBindViewHolder(@NonNull @NotNull MedViewHolder holder, int position, @NonNull @NotNull Med model) {
-                    holder.medView.setText(model.name);
-                    holder.timeView.setText(model.time);
-                    holder.btn.setOnClickListener(v -> {
-
-                    });
+            } else {
+                Log.d("Firestore", "get failed with ", task.getException());
+            }
+        });
+        db.collection("users").document(auth.getCurrentUser().getUid()).get().addOnCompleteListener(task -> {
+            ArrayList<Med> mList = new ArrayList<>();
+            if (task.isSuccessful()) {
+                DocumentSnapshot doc = task.getResult();
+                if (doc.exists()) {
+                    Map<String, Object> map = doc.getData();
+                    mList.add(new Med(map.get("med")));
+                    ListView listView = root.findViewById(R.id.lview);
+                    MedAdapter adapter = new MedAdapter(getContext(), mList);
+                    listView.setAdapter(adapter);
+                } else {
+                    Log.d("MissionActivity", "Error getting documents: ", task.getException());
                 }
-            };
-            rv.setAdapter(Adapter);
-            Adapter.startListening();
-        } else {
-            RecyclerView.Adapter<MedViewHolder> Adapter = new RecyclerView.Adapter<MedViewHolder>(){};
-            rv.setAdapter(Adapter);
-        }
-
-        SharedPreferences sp = requireActivity().getSharedPreferences("APP_PREFERNCES", Context.MODE_PRIVATE);
-        if (sp.getString("email", null) == null || auth.getCurrentUser() == null) {
+            }
+        });
+        if (auth.getCurrentUser().isAnonymous()) {
             username.setText("Здравствуйте, Гость!");
             bLogOut.setText("Войти");
             bLogOut.setOnClickListener(v -> getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).addToBackStack("").commit());
         } else {
-            String name = sp.getString("username", "Гость");
-            username.setText(String.format("Здравствуйте, %s!", name));
+            username.setText(String.format("Здравствуйте, %s!", user.getName()));
             bLogOut.setOnClickListener(v -> {
                 auth.signOut();
                 auth.signInAnonymously();
-                sp.edit().remove("username").remove("email").apply();
                 getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).commit();
             });
         }

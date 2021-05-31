@@ -3,6 +3,7 @@ package com.bulattim.med.ui.login;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,15 +15,17 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import com.bulattim.med.R;
+import com.bulattim.med.models.User;
 import com.bulattim.med.ui.main.MainFragment;
 import com.bulattim.med.ui.reg.RegFragment;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Objects;
+import java.util.Map;
 
 public class LoginFragment extends Fragment {
     private EditText email, pass;
@@ -43,11 +46,24 @@ public class LoginFragment extends Fragment {
             if (!isEmail(email)) {Toast.makeText(getContext(), "Неправильная почта!", Toast.LENGTH_LONG).show(); return;}
             auth.signInWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
                 if (task.isSuccessful()) {
-                    JSONObject db_get = null;
+                    User user = new User();
                     try {
-                        db_get = new JSONObject(Objects.requireNonNull(FirebaseDatabase.getInstance().getReference().child("users").child(Objects.requireNonNull(task.getResult().getUser().getUid())).getKey()));
-                        sp.edit().putString("username", db_get.getString("username")).putString("email", db_get.getString("email")).putString("med", db_get.getJSONArray("med").toString()).apply();
-                    } catch (JSONException e) {
+                        FirebaseFirestore.getInstance().collection("users").document(auth.getCurrentUser().getUid()).get().addOnCompleteListener(task1 -> {
+                            if (task1.isSuccessful()) {
+                                DocumentSnapshot document = task1.getResult();
+                                if (document.exists()) {
+                                    user.setName(String.valueOf(document.get("username")));
+                                    user.setEmail(String.valueOf(document.get("email")));
+                                    user.setMed((JSONObject) document.get("med"));
+                                    Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
+                                } else {
+                                    Log.d("Firestore", "No such document");
+                                }
+                            } else {
+                                Log.d("Firestore", "get failed with ", task1.getException());
+                            }
+                        });
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                     emptyInputEditText();
