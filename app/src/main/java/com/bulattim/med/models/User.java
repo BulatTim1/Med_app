@@ -80,8 +80,22 @@ public class User {
             e.printStackTrace();
         }
     }
+    public void setMed(JSONArray json){
+        try {
+            this.med = new ArrayList<>();
+            for (int i = 0; i < json.length(); i++){
+                this.med.add(new Med(json.getJSONObject(i).getString("name"), json.getJSONObject(i).getString("time")));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 
-    public ArrayList<Med> getMed() {
+    public ArrayList<Med> getArrayMed() {
         return med;
+    }
+
+    public JSONArray getJSONMed() {
+        return new JSONArray(med);
     }
 }

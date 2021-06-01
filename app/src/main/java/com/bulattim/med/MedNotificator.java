@@ -1,34 +1,15 @@
 package com.bulattim.med;
 
 import android.app.IntentService;
-import android.app.Notification;
-import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.IBinder;
-import android.util.TimeUtils;
+import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.messaging.FirebaseMessagingService;
-import com.google.firebase.messaging.RemoteMessage;
-
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.sql.Time;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Locale;
 
 //public class MedNotificator extends FirebaseMessagingService {
 //    public MedNotificator() {
@@ -72,33 +53,36 @@ public class MedNotificator extends IntentService {
 
     @Override
     public ComponentName startForegroundService(Intent service) {
-        while(true) {
-            db = FirebaseFirestore.getInstance();
-            auth = FirebaseAuth.getInstance();
-            user = auth.getCurrentUser();
-            db.collection("users").document(auth.getCurrentUser().getUid()).get().addOnSuccessListener(t -> {
-                for (Object o : t.get("med", Collection.class)) {
-                    try {
-                        JSONObject j = new JSONObject(o.toString());
-                        int hours = Integer.parseInt(j.get("time").toString().split(":")[0]);
-                        int min = Integer.parseInt(j.get("time").toString().split(":")[1]);
-                        Calendar cal = Calendar.getInstance();
-                        if (cal.get(Calendar.HOUR_OF_DAY) == hours && min - 5 <= cal.get(Calendar.MINUTE) && cal.get(Calendar.MINUTE) <= min + 5) {
-                            NotificationCompat.Builder build = new NotificationCompat.Builder(getBaseContext(), "Таблэтки").setContentTitle("MedNotificator").setContentText("Время принимать " + j.get("name")).setPriority(NotificationCompat.PRIORITY_MAX);
-                            NotificationManagerCompat man = NotificationManagerCompat.from(getBaseContext());
-                            man.notify(-1, build.build());
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            try {
-                Thread.sleep(60000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+//        while(true) {
+//            db = FirebaseFirestore.getInstance();
+//            auth = FirebaseAuth.getInstance();
+//            user = auth.getCurrentUser();
+//            db.collection("users").document(auth.getCurrentUser().getUid()).get().addOnSuccessListener(t -> {
+//                for (Object o : t.get("med", Collection.class)) {
+//                    try {
+//                        Log.e("service", o.toString());
+//                        JSONObject j = new JSONObject(o.toString());
+//                        int hours = Integer.parseInt(j.get("time").toString().split(":")[0]);
+//                        int min = Integer.parseInt(j.get("time").toString().split(":")[1]);
+//                        Calendar cal = Calendar.getInstance();
+//                        if (cal.get(Calendar.HOUR_OF_DAY) == hours && min - 5 <= cal.get(Calendar.MINUTE) && cal.get(Calendar.MINUTE) <= min + 5) {
+//                            NotificationCompat.Builder build = new NotificationCompat.Builder(getBaseContext(), "Таблэтки").setContentTitle("MedNotificator").setContentText("Время принимать " + j.get("name")).setPriority(NotificationCompat.PRIORITY_MAX);
+//                            NotificationManagerCompat man = NotificationManagerCompat.from(getBaseContext());
+//                            man.notify(-1, build.build());
+//                        }
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            });
+//            try {
+//                Thread.sleep(1000);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
+        Log.e("Service", "Service event");
+        return null;
     }
 
     FirebaseFirestore db;

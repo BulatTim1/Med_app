@@ -1,5 +1,6 @@
 package com.bulattim.med.ui.main;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,20 +19,14 @@ import com.bulattim.med.models.User;
 import com.bulattim.med.ui.add.AddFragment;
 import com.bulattim.med.ui.login.LoginFragment;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.Source;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 
 public class MainFragment extends Fragment {
@@ -48,6 +43,8 @@ public class MainFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
+    String token;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -57,14 +54,28 @@ public class MainFragment extends Fragment {
         Button bAdd = root.findViewById(R.id.bAdd);
         TextView username = root.findViewById(R.id.tHello);
         User user = new User();
+        token = requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).getString("token", "");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        FirebaseFirestore.getInstance().collection("users").document(auth.getCurrentUser().getUid()).get().addOnCompleteListener(task -> {
+        if (token.equals("")) {
+            auth.signInAnonymously().addOnSuccessListener(task -> {
+                token = task.getUser().getUid();
+                requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
+            });
+        }
+        FirebaseFirestore.getInstance().collection("users").document(token).get().addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 DocumentSnapshot doc = task.getResult();
                 if (doc.exists()) {
-                    user.setName(String.valueOf(doc.get("username")));
-                    user.setEmail(String.valueOf(doc.get("email")));
-                    user.setMed(doc.get("med").toString());
+                    Map map = doc.getData();
+                    Log.e("DB", map.values().toString());
+                    user.setName(map.get("username").toString());
+                    user.setEmail(map.get("email").toString());
+                    try {
+                        user.setMed(map.get("med").toString());
+                        Log.e("DB", map.get("med").toString());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 } else {
                     Log.d("Firestore", "No such document");
                 }
@@ -72,13 +83,22 @@ public class MainFragment extends Fragment {
                 Log.d("Firestore", "get failed with ", task.getException());
             }
         });
-        db.collection("users").document(auth.getCurrentUser().getUid()).get().addOnCompleteListener(task -> {
+        db.collection("users").document(token).get().addOnCompleteListener(task -> {
             ArrayList<Med> mList = new ArrayList<>();
             if (task.isSuccessful()) {
                 DocumentSnapshot doc = task.getResult();
                 if (doc.exists()) {
                     Map<String, Object> map = doc.getData();
-                    mList.add(new Med(map.get("med")));
+                    try {
+                        JSONArray json = new JSONArray(map.get("med").toString());
+                        for (int i = 0; i < json.length(); i++) {
+                            Med med = new Med(json.getJSONObject(i));
+                            mList.add(med);
+                            Log.e("DB", json.getString(i));
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                     ListView listView = root.findViewById(R.id.lview);
                     MedAdapter adapter = new MedAdapter(getContext(), mList);
                     listView.setAdapter(adapter);
@@ -95,6 +115,7 @@ public class MainFragment extends Fragment {
             username.setText(String.format("Здравствуйте, %s!", user.getName()));
             bLogOut.setOnClickListener(v -> {
                 auth.signOut();
+                requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().remove("token").apply();
                 auth.signInAnonymously();
                 getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).commit();
             });

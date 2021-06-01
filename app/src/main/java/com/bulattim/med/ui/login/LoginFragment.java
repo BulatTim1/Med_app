@@ -19,13 +19,10 @@ import com.bulattim.med.models.User;
 import com.bulattim.med.ui.main.MainFragment;
 import com.bulattim.med.ui.reg.RegFragment;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONObject;
-
-import java.util.Map;
 
 public class LoginFragment extends Fragment {
     private EditText email, pass;
@@ -46,9 +43,11 @@ public class LoginFragment extends Fragment {
             if (!isEmail(email)) {Toast.makeText(getContext(), "Неправильная почта!", Toast.LENGTH_LONG).show(); return;}
             auth.signInWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
                 if (task.isSuccessful()) {
+                    String token = task.getResult().getUser().getUid();
+                    requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
                     User user = new User();
                     try {
-                        FirebaseFirestore.getInstance().collection("users").document(auth.getCurrentUser().getUid()).get().addOnCompleteListener(task1 -> {
+                        FirebaseFirestore.getInstance().collection("users").document(token).get().addOnCompleteListener(task1 -> {
                             if (task1.isSuccessful()) {
                                 DocumentSnapshot document = task1.getResult();
                                 if (document.exists()) {
@@ -75,7 +74,10 @@ public class LoginFragment extends Fragment {
         }));
         bToReg.setOnClickListener((v -> getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new RegFragment()).addToBackStack("").commit()));
         bAnom.setOnClickListener(v -> {
-            auth.signInAnonymously();
+            auth.signInAnonymously().addOnSuccessListener(task -> {
+                String token = task.getUser().getUid();
+                requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
+            });
             getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new MainFragment()).commit();
         });
         return root;

@@ -3,7 +3,6 @@ package com.bulattim.med.ui.reg;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,18 +16,12 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.bulattim.med.R;
-import com.bulattim.med.models.Med;
 import com.bulattim.med.models.User;
 import com.bulattim.med.ui.login.LoginFragment;
 import com.bulattim.med.ui.main.MainFragment;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -66,20 +59,19 @@ public class RegFragment extends Fragment {
         if (!pass.getText().toString().equals(pass2.getText().toString()) || pass.getText().length() < 8){ Toast.makeText(getContext(), "Неверный пароль", Toast.LENGTH_LONG).show(); return;}
         auth.createUserWithEmailAndPassword(email.getText().toString(), pass.getText().toString()).addOnCompleteListener(requireActivity(), task -> {
                 if (task.isSuccessful()) {
+                    String token = task.getResult().getUser().getUid();
+                    requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
                     User user = new User(username.getText().toString(), email.getText().toString());
                     FirebaseFirestore db = FirebaseFirestore.getInstance();
                     Map<String, Object> map = new HashMap<>();
                     Map<String, Object> userdb = new HashMap<>();
                     userdb.put("username", user.getName());
                     userdb.put("email", user.getEmail());
-                    userdb.put("med", user.getMed());
-                    map.put(FirebaseAuth.getInstance().getCurrentUser().getUid(), userdb);
-                    db.collection("users").document(auth.getCurrentUser().getUid()).set(userdb).addOnCompleteListener(task1 -> {
+                    userdb.put("med", user.getJSONMed());
+                    map.put(token, userdb);
+                    db.collection("users").document(token).set(userdb).addOnCompleteListener(task1 -> {
                         if(task1.isSuccessful()){
-                            Log.d("Firestore", "все найс");
                             Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
-                        } else {
-                            Log.e("Firestore", "Чтото не так с дб");
                         }
                     });
                     emptyInputEditText();
