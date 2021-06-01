@@ -23,7 +23,6 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -57,66 +56,55 @@ public class MainFragment extends Fragment {
         token = requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).getString("token", "");
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         if (token.equals("")) {
+            auth.signOut();
             auth.signInAnonymously().addOnSuccessListener(task -> {
                 token = task.getUser().getUid();
                 requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
             });
-        }
-        FirebaseFirestore.getInstance().collection("users").document(token).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                DocumentSnapshot doc = task.getResult();
-                if (doc.exists()) {
-                    Map map = doc.getData();
-                    Log.e("DB", map.values().toString());
-                    user.setName(map.get("username").toString());
-                    user.setEmail(map.get("email").toString());
-                    try {
-                        user.setMed(map.get("med").toString());
-                        Log.e("DB", map.get("med").toString());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    Log.d("Firestore", "No such document");
-                }
-            } else {
-                Log.d("Firestore", "get failed with ", task.getException());
-            }
-        });
-        db.collection("users").document(token).get().addOnCompleteListener(task -> {
-            ArrayList<Med> mList = new ArrayList<>();
-            if (task.isSuccessful()) {
-                DocumentSnapshot doc = task.getResult();
-                if (doc.exists()) {
-                    Map<String, Object> map = doc.getData();
-                    try {
-                        JSONArray json = new JSONArray(map.get("med").toString());
-                        for (int i = 0; i < json.length(); i++) {
-                            Med med = new Med(json.getJSONObject(i));
-                            mList.add(med);
-                            Log.e("DB", json.getString(i));
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                    ListView listView = root.findViewById(R.id.lview);
-                    MedAdapter adapter = new MedAdapter(getContext(), mList);
-                    listView.setAdapter(adapter);
-                } else {
-                    Log.d("MissionActivity", "Error getting documents: ", task.getException());
-                }
-            }
-        });
-        if (auth.getCurrentUser().isAnonymous()) {
+            username.setText("Здравствуйте, Гость!");
+            bLogOut.setText("Войти");
+            bLogOut.setOnClickListener(v -> getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).addToBackStack("").commit());
+        } else if (auth.getCurrentUser().isAnonymous()) {
             username.setText("Здравствуйте, Гость!");
             bLogOut.setText("Войти");
             bLogOut.setOnClickListener(v -> getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).addToBackStack("").commit());
         } else {
-            username.setText(String.format("Здравствуйте, %s!", user.getName()));
+            db.collection("users").document(token).get().addOnCompleteListener(task -> {
+                ArrayList<Med> mList = new ArrayList<>();
+                if (task.isSuccessful()) {
+                    DocumentSnapshot doc = task.getResult();
+                    if (doc.exists()) {
+                        Map map = doc.getData();
+                        Log.e("DB", map.values().toString());
+                        user.setName(map.get("username").toString());
+                        user.setEmail(map.get("email").toString());
+                        try {
+                            JSONArray json = new JSONArray(map.get("med").toString());
+                            for (int i = 0; i < json.length(); i++) {
+                                Med med = new Med(json.getJSONObject(i));
+                                mList.add(med);
+                                Log.e("DB", json.getString(i));
+                            }
+                            user.setMed(map.get("med").toString());
+                            Log.e("DB", map.get("med").toString());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        ListView listView = root.findViewById(R.id.lview);
+                        MedAdapter adapter = new MedAdapter(getContext(), mList);
+                        listView.setAdapter(adapter);
+                    } else {
+                        Log.d("Firestore", "No such document");
+                    }
+                } else {
+                    Log.d("Firestore", "get failed with ", task.getException());
+                }
+            });
+            username.setText(("Здравствуйте, " + user.getName() + "!"));
             bLogOut.setOnClickListener(v -> {
                 auth.signOut();
-                requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().remove("token").apply();
-                auth.signInAnonymously();
+                auth.signInAnonymously().addOnCompleteListener(task -> {
+                });
                 getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).commit();
             });
         }

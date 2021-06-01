@@ -22,7 +22,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 public class LoginFragment extends Fragment {
     private EditText email, pass;
@@ -53,7 +54,11 @@ public class LoginFragment extends Fragment {
                                 if (document.exists()) {
                                     user.setName(String.valueOf(document.get("username")));
                                     user.setEmail(String.valueOf(document.get("email")));
-                                    user.setMed((JSONObject) document.get("med"));
+                                    try {
+                                        user.setMed(new JSONArray(document.get("med").toString()));
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
                                     Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
                                 } else {
                                     Log.d("Firestore", "No such document");
