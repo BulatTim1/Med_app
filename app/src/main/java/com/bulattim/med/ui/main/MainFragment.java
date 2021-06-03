@@ -49,8 +49,6 @@ public class MainFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
-    String token;
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
