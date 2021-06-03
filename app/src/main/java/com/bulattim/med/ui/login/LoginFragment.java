@@ -1,10 +1,8 @@
 package com.bulattim.med.ui.login;
 
-import android.app.Service;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,7 +13,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.bulattim.med.MedNotificator;
 import com.bulattim.med.R;
 import com.bulattim.med.helpers.DBHelper;
 import com.bulattim.med.models.User;
@@ -23,10 +20,8 @@ import com.bulattim.med.ui.main.MainFragment;
 import com.bulattim.med.ui.reg.RegFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 
 import java.util.Map;
 
@@ -53,14 +48,11 @@ public class LoginFragment extends Fragment {
                     requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
                     User user = new User();
                     try {
-                        DocumentSnapshot doc = DBHelper.getDB(getContext());
-                        if (doc != null) if(doc.exists()) {
-                            Map<String, Object> map = doc.getData();
+                        Map<String, Object> map = DBHelper.getDB(getContext());
                             user.setName(String.valueOf(map.get("username")));
                             user.setEmail(String.valueOf(map.get("email")));
                             user.setMed(new JSONArray(map.get("med").toString()));
                             Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
-                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -75,7 +67,7 @@ public class LoginFragment extends Fragment {
         bAnom.setOnClickListener(v -> {
             auth.signInAnonymously().addOnSuccessListener(task -> {
                 String token = task.getUser().getUid();
-                requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
+                getContext().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
             });
             getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new MainFragment()).commit();
         });

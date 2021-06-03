@@ -12,10 +12,8 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
-import com.bulattim.med.MedNotificator;
 import com.bulattim.med.R;
 import com.bulattim.med.helpers.DBHelper;
-import com.bulattim.med.models.Med;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -47,10 +45,10 @@ public class AddFragment extends Fragment {
         name = root.findViewById(R.id.edName);
         time = root.findViewById(R.id.edTime);
         Button btn = root.findViewById(R.id.bAddMed);
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        String token = requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).getString("token", uid == null ? uid : "");
+        String token = requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).getString("token", "");
         btn.setOnClickListener(v -> {
-            if (time.getText().length() > 5) Toast.makeText(getContext(), "Неверный формат времени", Toast.LENGTH_SHORT).show();
+            if (name.getText().length() == 0) Toast.makeText(getContext(), "Введите название!", Toast.LENGTH_SHORT).show();
+            else if (time.getText().length() > 5 && time.getText().length() < 3 && !time.getText().toString().contains(":")) Toast.makeText(getContext(), "Неверный формат времени", Toast.LENGTH_SHORT).show();
             else {
                 String[] hm = time.getText().toString().split(":");
                 String hh = hm[0];
@@ -59,12 +57,10 @@ public class AddFragment extends Fragment {
                 String t = time.getText().toString();
                 if (Integer.parseInt(hh) >= 24 || Integer.parseInt(mm) >= 60) Toast.makeText(getContext(), "Неверный формат времени", Toast.LENGTH_SHORT).show();
                 else {
-                    try {
-                        DocumentSnapshot doc = DBHelper.getDB(getContext());
+                        Map<String, Object> doc = DBHelper.getDB(getContext());
                         try {
-                            json = new JSONArray(doc.getData().get("med").toString());
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                            json = new JSONArray(doc.get("med").toString());
+                        } catch (Exception e) {
                             json = new JSONArray();
                         }
                         Map<String, Object> map = new HashMap<>();
@@ -72,14 +68,9 @@ public class AddFragment extends Fragment {
                         map.put("time", t);
                         json.put(new JSONObject(map));
                         Log.e("Meds", json.toString());
-                        FirebaseFirestore.getInstance().collection("users").document(token).update("med", json.toString()).addOnSuccessListener(documentReference -> {
-                            Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
-                        });
+                        FirebaseFirestore.getInstance().collection("users").document(token).update("med", json.toString()).addOnSuccessListener(documentReference -> Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show());
                         name.setText("");
                         time.setText("");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
                 }
             }
         });

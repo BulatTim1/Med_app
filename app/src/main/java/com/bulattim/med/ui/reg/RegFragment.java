@@ -16,13 +16,12 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.bulattim.med.R;
-import com.bulattim.med.models.User;
+import com.bulattim.med.helpers.DBHelper;
 import com.bulattim.med.ui.login.LoginFragment;
 import com.bulattim.med.ui.main.MainFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -61,15 +60,11 @@ public class RegFragment extends Fragment {
                 if (task.isSuccessful()) {
                     String token = task.getResult().getUser().getUid();
                     requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
-                    User user = new User(username.getText().toString(), email.getText().toString());
                     FirebaseFirestore db = FirebaseFirestore.getInstance();
-                    Map<String, Object> map = new HashMap<>();
-                    Map<String, Object> userdb = new HashMap<>();
-                    userdb.put("username", user.getName());
-                    userdb.put("email", user.getEmail());
-                    userdb.put("med", user.getJSONMed());
-                    map.put(token, userdb);
-                    db.collection("users").document(token).set(userdb).addOnCompleteListener(task1 -> {
+                    Map<String, Object> doc = DBHelper.getDB();
+                    doc.put("username", username.getText().toString());
+                    doc.put("email", email.getText().toString());
+                    db.collection("users").document(token).set(doc).addOnCompleteListener(task1 -> {
                         if(task1.isSuccessful()){
                             Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
                         }

@@ -8,16 +8,23 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.fragment.app.FragmentManager;
+
+import com.bulattim.med.MainActivity;
 import com.bulattim.med.R;
 import com.bulattim.med.models.Med;
+import com.bulattim.med.ui.change.ChangeFragment;
+import com.bulattim.med.ui.login.LoginFragment;
 
 import java.util.List;
 
 
 
 public class MedAdapter extends ArrayAdapter<Med> {
+    Context context;
     public MedAdapter(Context context, List<Med> object){
         super(context,0, object);
+        this.context = context;
     }
 
     @Override
@@ -35,7 +42,7 @@ public class MedAdapter extends ArrayAdapter<Med> {
         name.setText(med.getName());
         time.setText(med.getTime());
         change.setOnClickListener(v -> {
-            //TODO: change time or name of med
+//            ((Activity) context).getFragmentManager().beginTransaction().replace(R.layout.fragment_change, new ChangeFragment()).addToBackStack("").commit();
         });
 
 
