@@ -19,12 +19,15 @@ import com.bulattim.med.R;
 import com.bulattim.med.helpers.DBHelper;
 import com.bulattim.med.helpers.MedAdapter;
 import com.bulattim.med.models.Med;
+import com.bulattim.med.models.User;
 import com.bulattim.med.ui.add.AddFragment;
 import com.bulattim.med.ui.login.LoginFragment;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -40,10 +43,13 @@ public class MainFragment extends Fragment {
     public MainFragment() {
     }
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
+
+    String token;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -55,10 +61,10 @@ public class MainFragment extends Fragment {
         TextView username = root.findViewById(R.id.tHello);
         token = requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).getString("token", "");
         DBHelper.updateDB(getContext());
-        if (!MedNotificator.getState())
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                getContext().startForegroundService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_START_FOREGROUND_SERVICE"));
-            }
+//        if (!MedNotificator.getState())
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//                getContext().startForegroundService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_START_FOREGROUND_SERVICE"));
+//            }
         if (token.equals("")) {
             auth.signOut();
             auth.signInAnonymously().addOnSuccessListener(task -> {
@@ -72,7 +78,7 @@ public class MainFragment extends Fragment {
                 username.setText("Здравствуйте, Гость!");
                 bLogOut.setText("Войти");
                 bLogOut.setOnClickListener(v -> {
-                    getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
+//                    getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
                     getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).addToBackStack("").commit();
                 });
             } else {
@@ -114,7 +120,7 @@ public class MainFragment extends Fragment {
             });
         }
         bAdd.setOnClickListener(v -> {
-            getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
+//            getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
             getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new AddFragment()).addToBackStack("").commit();
         });
         return root;
