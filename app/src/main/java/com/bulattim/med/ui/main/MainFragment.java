@@ -59,10 +59,10 @@ public class MainFragment extends Fragment {
         TextView username = root.findViewById(R.id.tHello);
         token = requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).getString("token", "");
         DBHelper.updateDB(getContext());
-//        if (!MedNotificator.getState())
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//                getContext().startForegroundService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_START_FOREGROUND_SERVICE"));
-//            }
+        if (!MedNotificator.getState())
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                getContext().startForegroundService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_START_FOREGROUND_SERVICE"));
+            }
         if (token.equals("")) {
             auth.signOut();
             auth.signInAnonymously().addOnSuccessListener(task -> {
@@ -76,7 +76,7 @@ public class MainFragment extends Fragment {
                 username.setText("Здравствуйте, Гость!");
                 bLogOut.setText("Войти");
                 bLogOut.setOnClickListener(v -> {
-//                    getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
+                    getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
                     getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).addToBackStack("").commit();
                 });
             } else {
@@ -118,7 +118,7 @@ public class MainFragment extends Fragment {
             });
         }
         bAdd.setOnClickListener(v -> {
-//            getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
+            getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
             getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new AddFragment()).addToBackStack("").commit();
         });
         return root;
