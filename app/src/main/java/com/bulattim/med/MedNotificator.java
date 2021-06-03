@@ -1,15 +1,26 @@
 package com.bulattim.med;
 
-import android.app.IntentService;
+import android.app.Service;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.IBinder;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
+import com.bulattim.med.helpers.DBHelper;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.DocumentSnapshot;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.Calendar;
+import java.util.Map;
 
 //public class MedNotificator extends FirebaseMessagingService {
 //    public MedNotificator() {
@@ -40,52 +51,81 @@ import com.google.firebase.firestore.FirebaseFirestore;
 //        // message, here is where that should be initiated. See sendNotification method below.
 //    }
 //}
-public class MedNotificator extends IntentService {
+public class MedNotificator extends Service {
+    static boolean f = false;
+    DocumentSnapshot doc;
 
-    public MedNotificator(String name) {
-        super(name);
+    public MedNotificator() {}
+
+    public static boolean getState() {
+        return f;
     }
 
-    @Override
-    protected void onHandleIntent(@Nullable Intent intent) {
-        startForegroundService(intent);
+    public static void stopService() {
+        f = false;
     }
 
+    @Nullable
     @Override
-    public ComponentName startForegroundService(Intent service) {
-//        while(true) {
-//            db = FirebaseFirestore.getInstance();
-//            auth = FirebaseAuth.getInstance();
-//            user = auth.getCurrentUser();
-//            db.collection("users").document(auth.getCurrentUser().getUid()).get().addOnSuccessListener(t -> {
-//                for (Object o : t.get("med", Collection.class)) {
-//                    try {
-//                        Log.e("service", o.toString());
-//                        JSONObject j = new JSONObject(o.toString());
-//                        int hours = Integer.parseInt(j.get("time").toString().split(":")[0]);
-//                        int min = Integer.parseInt(j.get("time").toString().split(":")[1]);
-//                        Calendar cal = Calendar.getInstance();
-//                        if (cal.get(Calendar.HOUR_OF_DAY) == hours && min - 5 <= cal.get(Calendar.MINUTE) && cal.get(Calendar.MINUTE) <= min + 5) {
-//                            NotificationCompat.Builder build = new NotificationCompat.Builder(getBaseContext(), "Таблэтки").setContentTitle("MedNotificator").setContentText("Время принимать " + j.get("name")).setPriority(NotificationCompat.PRIORITY_MAX);
-//                            NotificationManagerCompat man = NotificationManagerCompat.from(getBaseContext());
-//                            man.notify(-1, build.build());
-//                        }
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            });
-//            try {
-//                Thread.sleep(1000);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        }
-        Log.e("Service", "Service event");
+    public IBinder onBind(Intent intent) {
         return null;
     }
 
-    FirebaseFirestore db;
-    FirebaseAuth auth;
-    FirebaseUser user;
+    @Override
+    public void onCreate() {
+        super.onCreate();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null) {
+            String action = intent.getAction();
+            switch (action) {
+                case "ACTION_START_FOREGROUND_SERVICE":
+                case "ACTION_BOOT_COMPLETED":
+                    startForegroundService();
+                    Toast.makeText(getApplicationContext(), "Foreground service is started.", Toast.LENGTH_LONG).show();
+                    break;
+                case "ACTION_STOP_FOREGROUND_SERVICE":
+                    stopForegroundService();
+                    Toast.makeText(getApplicationContext(), "Foreground service is stopped.", Toast.LENGTH_LONG).show();
+                    break;
+            }
+        }
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void startForegroundService() {
+        f = true;
+        Calendar cal = Calendar.getInstance();
+        Log.e("Service", "Цикл сервиса");
+        try {
+            doc = DBHelper.getDB(getBaseContext());
+            if (doc != null) if (doc.exists()) {
+                Map<String, Object> map = doc.getData();
+                JSONArray j = new JSONArray(map.get("med").toString());
+                for (int i = 0; i < j.length(); i++) {
+                    String time = new JSONObject(j.get(i).toString()).get("time").toString();
+                    String name = new JSONObject(j.get(i).toString()).get("name").toString();
+                    int hours = Integer.parseInt(time.split(":")[0]);
+                    int min = Integer.parseInt(time.split(":")[1]);
+                    if (cal.get(Calendar.HOUR_OF_DAY) == hours && min - 5 <= cal.get(Calendar.MINUTE) && cal.get(Calendar.MINUTE) <= min + 5) {
+                        NotificationCompat.Builder build = new NotificationCompat.Builder(getBaseContext(), "Таблэтки").setContentTitle("MedNotificator").setContentText("Время принимать " + name).setPriority(NotificationCompat.PRIORITY_MAX);
+                        startForeground(1, build.build());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e("Service", e.getLocalizedMessage());
+        }
+    }
+
+    private void stopForegroundService()
+    {
+        Log.d("Service", "Stop foreground service.");
+        // Stop foreground service and remove the notification.
+        stopForeground(true);
+        // Stop the foreground service.
+        stopSelf();
+    }
 }

@@ -1,4 +1,4 @@
-package com.bulattim.med.ui.add;
+package com.bulattim.med.ui.change;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -12,10 +12,8 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
-import com.bulattim.med.MedNotificator;
 import com.bulattim.med.R;
 import com.bulattim.med.helpers.DBHelper;
-import com.bulattim.med.models.Med;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -27,9 +25,9 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AddFragment extends Fragment {
+public class ChangeFragment extends Fragment {
 
-    public AddFragment() {
+    public ChangeFragment() {
     }
 
     @Override
