@@ -1,5 +1,6 @@
 package com.bulattim.med.ui.login;
 
+import android.app.Service;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,7 +15,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.bulattim.med.MedNotificator;
 import com.bulattim.med.R;
+import com.bulattim.med.helpers.DBHelper;
 import com.bulattim.med.models.User;
 import com.bulattim.med.ui.main.MainFragment;
 import com.bulattim.med.ui.reg.RegFragment;
@@ -22,7 +25,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.util.Map;
 
 public class LoginFragment extends Fragment {
     private EditText email, pass;
@@ -47,21 +53,14 @@ public class LoginFragment extends Fragment {
                     requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
                     User user = new User();
                     try {
-                        FirebaseFirestore.getInstance().collection("users").document(token).get().addOnCompleteListener(task1 -> {
-                            if (task1.isSuccessful()) {
-                                DocumentSnapshot document = task1.getResult();
-                                if (document.exists()) {
-                                    user.setName(String.valueOf(document.get("username")));
-                                    user.setEmail(String.valueOf(document.get("email")));
-                                    user.setMed((JSONObject) document.get("med"));
-                                    Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
-                                } else {
-                                    Log.d("Firestore", "No such document");
-                                }
-                            } else {
-                                Log.d("Firestore", "get failed with ", task1.getException());
-                            }
-                        });
+                        DocumentSnapshot doc = DBHelper.getDB(getContext());
+                        if (doc != null) if(doc.exists()) {
+                            Map<String, Object> map = doc.getData();
+                            user.setName(String.valueOf(map.get("username")));
+                            user.setEmail(String.valueOf(map.get("email")));
+                            user.setMed(new JSONArray(map.get("med").toString()));
+                            Toast.makeText(getContext(), "Успешно", Toast.LENGTH_LONG).show();
+                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
