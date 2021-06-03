@@ -95,6 +95,10 @@ public class MedNotificator extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
+    public void startForeground(){
+
+    }
+
     private void startForegroundService() {
         f = true;
         Calendar cal = Calendar.getInstance();
@@ -123,6 +127,7 @@ public class MedNotificator extends Service {
     private void stopForegroundService()
     {
         Log.d("Service", "Stop foreground service.");
+        f = false;
         // Stop foreground service and remove the notification.
         stopForeground(true);
         // Stop the foreground service.

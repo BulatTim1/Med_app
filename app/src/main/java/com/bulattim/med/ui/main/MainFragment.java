@@ -67,8 +67,8 @@ public class MainFragment extends Fragment {
             });
             DBHelper.updateDB(getContext());
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            if (Optional.ofNullable(auth.getCurrentUser().isAnonymous()).) {
+        try {
+            if (auth.getCurrentUser().isAnonymous()) {
                 username.setText("Здравствуйте, Гость!");
                 bLogOut.setText("Войти");
                 bLogOut.setOnClickListener(v -> {
@@ -106,6 +106,12 @@ public class MainFragment extends Fragment {
                     getParentFragmentManager().beginTransaction().replace(R.id.host_fragment, new LoginFragment()).commit();
                 });
             }
+        } catch (NullPointerException e){
+            auth.signOut();
+            auth.signInAnonymously().addOnSuccessListener(task -> {
+                token = task.getUser().getUid();
+                requireActivity().getSharedPreferences("token", Context.MODE_PRIVATE).edit().putString("token", token).apply();
+            });
         }
         bAdd.setOnClickListener(v -> {
             getContext().stopService(new Intent(getActivity(), MedNotificator.class).setAction("ACTION_STOP_FOREGROUND_SERVICE"));
