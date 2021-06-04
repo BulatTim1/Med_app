@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Med Notifier</string>
+    <string name="app_name">Med Notificator</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Почта</string>
     <string name="prompt_password">Пароль</string>
