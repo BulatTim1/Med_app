@@ -73,7 +73,7 @@ public class MedNotificator extends Worker {
                         Log.e("Notif", "Notification created");
                     }
                 }
-                Thread.sleep(10000);
+                Thread.sleep(60000);
             } catch (Exception e) {
                 Log.e("Service", e.getLocalizedMessage());
             }
